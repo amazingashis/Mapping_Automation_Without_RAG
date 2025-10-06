@@ -106,11 +106,14 @@ def call_databricks_llm(endpoint_key, prompt, max_tokens=4000):
         }
         
         payload = {
-            "inputs": prompt,
-            "parameters": {
-                "max_tokens": max_tokens,
-                "temperature": 0.1
-            }
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "max_tokens": max_tokens,
+            "temperature": 0.1
         }
         
         # Add timeout and retry logic
@@ -175,9 +178,15 @@ def create_mapping_prompt(output_layout, data_dictionary, table_names):
     """Create a comprehensive prompt for the LLM to generate data mapping"""
     
     prompt = f"""
-You are a US Healthcare Data Modeler and Data Analyst expert. Your task is to create a comprehensive data mapping and transformation plan.
+You are an expert US Healthcare Data Modeler and Data Analyst specializing in healthcare data standardization and integration. You have extensive experience working with major healthcare data sources including Cigna, Facets, and other US healthcare systems. Your expertise includes:
 
-**TASK**: Generate SQL-like transformation logic to map source healthcare data tables to the target output layout.
+- US Healthcare data standards (FHIR, HL7, X12, SNOMED CT, ICD-10, CPT)
+- Healthcare payer systems (Cigna, Facets, Epic, Cerner, etc.)
+- Claims processing, member enrollment, provider networks, and billing systems
+- Healthcare data compliance (HIPAA, HITECH)
+- Complex data transformations and mappings for healthcare interoperability
+
+**TASK**: Generate comprehensive SQL-like transformation logic to map multiple source healthcare data tables into standardized output layouts, ensuring data quality, compliance, and accurate healthcare data representation.
 
 **TARGET OUTPUT LAYOUT**:
 {json.dumps(output_layout, indent=2)}
@@ -189,28 +198,68 @@ You are a US Healthcare Data Modeler and Data Analyst expert. Your task is to cr
 {json.dumps(data_dictionary, indent=2)}
 
 **REQUIREMENTS**:
-1. Create mapping logic for each field in the target output layout
-2. Use appropriate transformations like:
-   - CAST() for data type conversions
-   - JOIN operations between source tables
-   - TRIM() for cleaning string data
-   - CASE/WHEN for conditional logic
-   - COALESCE() for handling nulls
-   - String concatenation where needed
-   - Date formatting functions
+1. **Data Aggregation & Integration**: Analyze and aggregate data from multiple small source tables to create comprehensive target layouts
+2. **Healthcare-Specific Transformations**: Apply industry-standard transformations including:
+   - CAST() for data type conversions (dates, amounts, codes)
+   - Complex JOIN operations across multiple healthcare tables (members, claims, providers, benefits)
+   - TRIM() and data cleansing for healthcare identifiers and codes
+   - CASE/WHEN for healthcare business logic and coding transformations
+   - COALESCE() and ISNULL() for handling missing healthcare data
+   - String concatenation for composite healthcare identifiers
+   - Date/time formatting for healthcare transaction dates
+   - Healthcare code mapping (ICD-9 to ICD-10, procedure codes, etc.)
 
-3. Consider US Healthcare data standards (FHIR, HL7, etc.)
-4. Handle common healthcare data sources like Cigna, Facets, etc.
-5. Ensure data quality and validation
+3. **Healthcare Data Standards Compliance**: 
+   - Ensure HIPAA compliance in data handling
+   - Apply FHIR and HL7 standards where applicable
+   - Maintain healthcare data integrity and audit trails
+   - Handle PHI (Protected Health Information) appropriately
+
+4. **Source System Expertise**: 
+   - Understand Cigna-specific data structures and business rules
+   - Handle Facets system data models and transformations
+   - Account for payer-specific claim processing logic
+   - Map provider network and member enrollment data accurately
+
+5. **Data Quality & Validation**:
+   - Implement healthcare-specific data validation rules
+   - Handle duplicate member records and claim adjustments
+   - Validate healthcare amounts, dates, and code relationships
+   - Ensure referential integrity across healthcare entities
 
 **OUTPUT FORMAT**:
-Provide a detailed mapping document with:
-1. Field-by-field mapping table
-2. SQL transformation queries
-3. Data quality checks
-4. Notes on assumptions made
+Provide a comprehensive healthcare data mapping document with:
+1. **Field-by-Field Mapping Table**: 
+   - Source table(s) and field(s) for each target field
+   - Transformation logic with healthcare context
+   - Data type conversions and formatting rules
+   - Business rules and validation criteria
 
-Generate comprehensive transformation logic that can be used to map the source tables to the target output layout.
+2. **SQL Transformation Queries**: 
+   - Complete SQL statements for data extraction and transformation
+   - Multi-table JOIN operations with proper healthcare entity relationships
+   - Aggregation logic for summarizing healthcare transactions
+   - Error handling and data quality checks
+
+3. **Healthcare-Specific Considerations**:
+   - PHI handling and de-identification strategies
+   - Healthcare code standardization and mapping
+   - Date range validations for healthcare events
+   - Amount calculations and adjustments logic
+
+4. **Data Quality Validation Scripts**:
+   - Member ID validation and deduplication
+   - Claim amount reconciliation checks
+   - Provider network validation
+   - Date consistency and logical sequence checks
+
+5. **Implementation Notes**:
+   - Assumptions about source data structure
+   - Healthcare business rules applied
+   - Potential data quality issues and mitigation strategies
+   - Performance optimization recommendations for large healthcare datasets
+
+Generate comprehensive, production-ready transformation logic that can be implemented to accurately map healthcare source tables to standardized output layouts while maintaining data integrity and compliance.
 """
     
     return prompt

@@ -1,8 +1,16 @@
 # Configuration file for Databricks credentials
 # Copy this file to config.py and update with your actual credentials
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+    
+    # Check for Databricks token (may already be loaded in environment)
+databricks_token = os.getenv("DATABRICKS_TOKEN")
 
 DATABRICKS_CONFIG = {
-    'token': 'YOUR_DATABRICKS_TOKEN_HERE',  # Replace with your actual Databricks token
+    'token': databricks_token,  # Replace with your actual Databricks token
     'endpoints': {
         'claude-sonnet-4': 'https://dbc-3735add4-1cb6.cloud.databricks.com/serving-endpoints/databricks-claude-sonnet-4/invocations',
         'llama-3-70b': 'https://dbc-3735add4-1cb6.cloud.databricks.com/serving-endpoints/databricks-meta-llama-3-3-70b-instruct/invocations'
