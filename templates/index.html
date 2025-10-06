@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Healthcare Data Mapping Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        select, input[type="file"], textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input[type="file"]:focus, textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            flex: 0 0 auto;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .results h3 {
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        .result-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin-top: 20px;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e7f3ff;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .preview-content {
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .help-text {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 US Healthcare Data Mapping Generator</h1>
+            <p>AI-Powered Data Transformation for Healthcare Systems</p>
+        </div>
+
+        <div class="main-content">
+            <form id="mappingForm">
+                <!-- Output Layout Selection -->
+                <div class="form-section">
+                    <h3>📋 Select Target Output Layout</h3>
+                    <div class="form-group">
+                        <label for="layout">Choose the target healthcare data layout:</label>
+                        <select id="layout" name="layout" required>
+                            <option value="">-- Select Layout --</option>
+                            {% for layout in layouts %}
+                            <option value="{{ layout }}">{{ layout.replace('_', ' ').title() }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="help-text">Select the standardized output format for your healthcare data mapping.</div>
+                    </div>
+                    <div id="layoutPreview" class="preview-section" style="display: none;">
+                        <h4>Layout Preview:</h4>
+                        <div id="previewContent" class="preview-content"></div>
+                    </div>
+                </div>
+
+                <!-- Data Dictionary Upload -->
+                <div class="form-section">
+                    <h3>📄 Upload Data Dictionary</h3>
+                    <div class="info-box">
+                        <strong>📝 Data Dictionary:</strong> Upload a CSV or PDF file containing the schema and field definitions for your source healthcare data tables.
+                    </div>
+                    <div class="form-group">
+                        <label for="data_dictionary">Data Dictionary File (CSV or PDF):</label>
+                        <input type="file" id="data_dictionary" name="data_dictionary" accept=".csv,.pdf" required>
+                        <div class="help-text">Supported formats: CSV, PDF. Max file size: 16MB</div>
+                    </div>
+                </div>
+
+                <!-- Source Tables Configuration -->
+                <div class="form-section">
+                    <h3>🗂️ Source Data Tables</h3>
+                    <div class="info-box">
+                        <strong>📊 Table Names:</strong> Specify the names of source data tables that should be used for mapping. The system will look up these table details in your data dictionary.
+                    </div>
+                    <div class="form-group">
+                        <label for="table_names">Source Table Names (comma-separated):</label>
+                        <textarea id="table_names" name="table_names" placeholder="e.g., member_demographics, claims_detail, provider_network" required></textarea>
+                        <div class="help-text">Enter table names separated by commas. Examples: Cigna tables, Facets tables, etc.</div>
+                    </div>
+                </div>
+
+                <!-- LLM Model Selection -->
+                <div class="form-section">
+                    <h3>🤖 AI Model Selection</h3>
+                    <div class="form-group">
+                        <label for="llm_model">Choose Databricks LLM Model:</label>
+                        <select id="llm_model" name="llm_model" required>
+                            <option value="claude-sonnet-4">Claude Sonnet 4 (Recommended)</option>
+                            <option value="llama-3-70b">Meta Llama 3.3 70B Instruct</option>
+                        </select>
+                        <div class="help-text">Claude Sonnet 4 is recommended for complex healthcare data transformations.</div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        🚀 Generate Data Mapping
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        🔄 Reset Form
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>🔄 AI is analyzing your data and generating mapping transformations...</p>
+                <p><small>This may take a few moments depending on the complexity of your data.</small></p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="results">
+                <h3>✅ Generated Data Mapping Results</h3>
+                <div id="resultContent" class="result-content"></div>
+                <div class="button-group" style="margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="downloadResults()">
+                        💾 Download Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="error" class="error" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentResults = null;
+
+        // Layout preview functionality
+        document.getElementById('layout').addEventListener('change', function() {
+            const layoutName = this.value;
+            const previewDiv = document.getElementById('layoutPreview');
+            const previewContent = document.getElementById('previewContent');
+            
+            if (layoutName) {
+                fetch(`/api/layouts/${layoutName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            previewContent.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                        } else {
+                            let previewHTML = `<strong>Layout:</strong> ${data.layout_name}<br>`;
+                            previewHTML += `<strong>Total Fields:</strong> ${data.total_fields}<br><br>`;
+                            previewHTML += `<strong>Field Preview:</strong><br>`;
+                            
+                            data.preview.forEach((field, index) => {
+                                previewHTML += `<div style="margin-bottom: 10px; padding: 5px; background: #f8f9fa; border-radius: 3px;">`;
+                                previewHTML += `<strong>${index + 1}. ${field.Field || 'N/A'}</strong><br>`;
+                                previewHTML += `Type: ${field.Type || 'N/A'} | Description: ${field.Description || 'N/A'}`;
+                                previewHTML += `</div>`;
+                            });
+                            
+                            previewContent.innerHTML = previewHTML;
+                        }
+                        previewDiv.style.display = 'block';
+                    })
+                    .catch(error => {
+                        previewContent.innerHTML = `<span style="color: red;">Error loading preview: ${error.message}</span>`;
+                        previewDiv.style.display = 'block';
+                    });
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        });
+
+        // Form submission
+        document.getElementById('mappingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Hide previous results and errors
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            
+            fetch('/api/generate_mapping', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showResults(data);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                showError('Network error: ' + error.message);
+            });
+        });
+
+        function showResults(data) {
+            currentResults = data;
+            const resultContent = document.getElementById('resultContent');
+            
+            let resultHTML = `<strong>🎯 Mapping Configuration:</strong>\n`;
+            resultHTML += `Layout: ${data.layout}\n`;
+            resultHTML += `Source Tables: ${data.table_names.join(', ')}\n`;
+            resultHTML += `AI Model: ${data.llm_model}\n`;
+            resultHTML += `Output Fields: ${data.output_layout_fields}\n`;
+            resultHTML += `Data Dictionary Entries: ${data.data_dict_entries}\n\n`;
+            
+            resultHTML += `<strong>🤖 AI-Generated Mapping:</strong>\n`;
+            resultHTML += `${JSON.stringify(data.mapping_result, null, 2)}`;
+            
+            resultContent.textContent = resultHTML;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '❌ Error: ' + message;
+            errorDiv.style.display = 'block';
+        }
+
+        function resetForm() {
+            document.getElementById('mappingForm').reset();
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('layoutPreview').style.display = 'none';
+            currentResults = null;
+        }
+
+        function downloadResults() {
+            if (currentResults) {
+                const dataStr = JSON.stringify(currentResults, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `healthcare_mapping_${currentResults.layout}_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+Schema,Domain,Domain Description,Field,Array Field,Type,Related,Cardinality,Description
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,bill_id,,String,,,Generated key for this entity.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_bill_id,,String,,,The source system-generated key for this entity.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,billing_entity_id,,String,,,The billing entity ID.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,invoice_date_time,,Datetime,,,The invoice datetime stamp for this data row.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,due_date,,Datetime,,,The billing due date.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,plan_id,,String,,,This is the plan identifier associated with the billing entity.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,product_id,,String,,,This is the product Identifier associated with the billing entity.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,billing_component_id,,String,,,The billing component ID.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,billing_component_prefix,,String,,,The billing component prefix.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,billing_component_type,,String,,,"The billing component type for this row. Examples - Medicare Choice, Part A Medicare, Part B Medicare, Non-Medicare."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,coverage_due_date,,Datetime,,,The due date that this coverage is applicable to.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,coverage_from_date,,Datetime,,,The from date of the period that the coverage billed for this row.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,premium_type_code,,String,,,"The premium type for this row. Examples - Normal, Waived."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_id,,String,,,The key of the entity subscriber.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,member_id,,String,,,The key of the entity member.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_create_date_time,,Datetime,,,The date and time the data row is created.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,coverage_through_date,,Datetime,,,The through date of the period for which coverage is billed.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,bill_level,,String,,,"The billing entity bill level. Examples - Group, Individual, Subgroup."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,employer_group_id,,String,,,The key associated with the employer group.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,sub_group_id,,String,,,The key associated with the subgroup.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,billing_group_id,,String,,,The Billing Group ID for the member.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,premium_code,,String,,,"The premium indicator. Examples - Minimum Premium, Conventional Premium associated with an ASO Plus Plan or Conventional."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,disposition_code,,String,,,"The disposition code for this row. Examples - Modal, Retroactive."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,resolve_code,,String,,,"Identifies if the state of this data row from the perspective of billing and rebilling. Examples - Back Out of Resolved Retro Item, Normal Item, Resolved Retro Item, Transfer or Backed Out Item to Prior Bill."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,billing_mode,,Int4,,,"The billing mode represents the frequency of the billing. Example: Quarterly, Ninthly, Tenthly, Monthly, Annual, Semiannual."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,new_backout_code,,String,,,The back out new row indicator that identifies if this row is a new or a backed-out row. This indicator is used in the analysis of rows.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,related_entity_carrier_id,,String,,,The carrier ID associated with the product billing component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,class_id,,String,,,The class ID of the subscriber.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,family_code,,String,,,"The resulting family indicator for this plan/product/component. Examples - Dependents Only, Family, Subscriber & Spouse, Subscriber & Dependents, Spouse & Dependents, Spouse Only, Subscriber Only."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_description,,String,,,"Rating tier description. It determines the rating of subscriber based on different tiers. Example: 1 = SB, 2 = SPS, 3 = All Children, 4 = Family."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_one_count,,Int4,,,Rating Tier Column one Count value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_two_count,,Int4,,,Rating Tier Column two Count value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_three_count,,Int4,,,Rating Tier Column three Count value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_four_count,,Int4,,,Rating Tier Column four Count value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_five_count,,Int4,,,Rating Tier Column five Count value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,tier_column_six_count,,Int4,,,Rating Tier Column six Count value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,medicare_entitlement_code,,String,,,"The Medicare entitlement code. Example: Medicaid, Non-Medicaid, Working Aged, ESRD (End Stage Renal Disease), Hospice."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,capitation_percent_premium_level,,String,,,The level at which to aggregate billing data for capitation as a percent of member (modal or modal and retroactive) premium.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,rating_state_code,,String,,,The state code  related to the rating zone.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,rating_county_code,,String,,,The county code related to the rating zone.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,rating_area_code,,String,,,The area code related to the rating zone.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,rating_industry_classification,,String,,,The Standard Industry Classification or No. American Industry Classification System code. (SIC/NAICS).
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_lives_count,,Int4,,,The total number of subscriber lives for this plan/product/bill component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,dependent_lives_count,,Int4,,,The total number of dependent lives for this plan/product/bill component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,volume,,"Decimal(38, 10)",,,The total volume for this plan/product/bill component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_premium_amount,,"Decimal(38, 10)",,,The total subscriber billed premium for this plan/product/bill component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,dependent_premium_amount,,"Decimal(38, 10)",,,The total dependent premium for this plan/product/bill component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_load_premium_amount,,"Decimal(38, 10)",,,The total subscriber load amount for this Plan/Product/Bill Component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,dependent_load_premium_amount,,"Decimal(38, 10)",,,The total dependent load amount for this Plan/Product/Bill Component.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_conventional_premium_amount,,"Decimal(38, 10)",,,When processing for Minimum Premium Plans the conventional premium for the subscriber will be stored in this column.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,dependent_conventional_premium_amount,,"Decimal(38, 10)",,,When processing for Minimum Premium Plans the conventional premium for the dependents will be stored in this column.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_annualized_premium_amount,,"Decimal(38, 10)",,,The total subscriber premium annualized.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,dependent_annualized_premium_amount,,"Decimal(38, 10)",,,The total dependent premium annualized.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,subscriber_liability_limit_amount,,"Decimal(38, 10)",,,When processing for Minimum Premium Plans the specific liability limit calculated as the result of rating for the subscriber will be stored in this column.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,dependent_liability_limit_amount,,"Decimal(38, 10)",,,When processing for Minimum Premium Plans the specific liability limit calculated as the result of rating for the dependents will be stored in this column.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,reference_ids,,Array,reference_identifier_info,one-many,This is a consolidated list of additional identifiers related to the transaction. Identities of any related or additional transactions or entities as needed can be used.
+Financials,bill_custom_detail,,,reference_id,String,,,This is a unique identifier.
+Financials,bill_custom_detail,,,id_type,String,,,This is the type of identification used as the reference ID.
+Financials,bill_custom_detail,,,id_value,String,,,This is the ID value for the reference ID.
+Financials,bill_custom_detail,,,id_concept,String,,,This is the ID concept context for the reference ID.
+Financials,bill_custom_detail,,,id_status,String,,,This is the current status for the reference ID.
+Financials,bill_custom_detail,,,input_field_name,String,,,This is the original source attribute or field name.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,variable_fields,,Array,coded_value_info,one-many,This lists the codes associated with the transactions. It can have list additional codes like statuses for which there is no place holder.
+Financials,bill_custom_detail,,,reference_id,String,,,This is a unique identifier.
+Financials,bill_custom_detail,,,code_id,String,,,This is an ID for the code.
+Financials,bill_custom_detail,,,code_type,String,,,This is the type of code.
+Financials,bill_custom_detail,,,code_value,String,,,This is the code value.
+Financials,bill_custom_detail,,,code_value_type,String,,,"This is the type of code value. Only primitives of the type supported by JSON schema allowed. Examples include string, Boolean, and number."
+Financials,bill_custom_detail,,,code_description,String,,,This contains the text or additional information about the code.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_extension_record_id,,Array,source_extension_record_info,one-many,This array will contain the source table name and abacus record id which is used to create this record.
+Financials,bill_custom_detail,,,reference_id,String,,,This is a unique identifier.
+Financials,bill_custom_detail,,,source_table_name,String,,,This will store the source table name.
+Financials,bill_custom_detail,,,abacus_record_id,String,,,This will store the abacus record id from source.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,original_source_value,,Map,string,one-many,This is the value of the original source.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,data_signature_bitmap,,String,,,"This is a special field (a signature) in all datasets, derived from binary bits indicating membership in protected categories (such as sensitive health conditions, state residency, membership in certain identifiable populations, or affiliations with specific entities)."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_entity_type,,String,,,This is a label for the domain that indicates the type of record from which the data came.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_ingestion_id,,String,,,This is the unique identifier of the ingestion process that imported the data into the Abacus Insights Data Lake. Use it to reference information about a specific ingestion.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_id,,String,,,"This is an additional human-readable identifier to use along with SourceID, which tends to be a longer, harder to parse string. It is optional, and the constraints associated with SourceID do not apply."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_consume_timestamp,,Datetime,,,"This is the date including time in ISO-8601 format when this record was consumed. In the absence of a source timestamp, for an append-only model, the record with the greatest value of this column represents the latest data."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_logical_delete_ind,,Boolean,,,"A logical delete (sometimes referred to as a soft delete) is a delete that doesn't actually delete the relevant data but instead marks the data as deleted. If true, this indicates that this record was marked as deleted in the source, but still remains in the Abacus Domain Model, which has an append-only model. A record marked as voided or inactive in the source is ingested into the domain model with this field set to true."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_hash_id,,String,,,"This is the hash of the current record only ignoring the hash of the nested child entities. Hashing of a record ignores common properties: IngestionID, BatchID, CorrelationID, IsAuthoritative, SchemaVersion, ConsumeTimestamp, PartialUpdate, LogicalDeleted, HardDeleted and HashID"
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_scd_key,,String,,,The hash of all SCD keys identified by business
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_eff_ts,,Datetime,,,During an insert of a record it will be current timestamp or a timestamp that raw source file has. This attribute cannot be modified later.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_exp_ts,,Datetime,,,"During an insert it will be the current timestamp. During an update, will be set to recordexpirydate."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_create_ts,,Datetime,,,This will be current timestamp when a record is first inserted into the table. Different from recordeffectivedatetime - is that this will always be current timestamp and will never reference any source files. This attribute cannot be modified later.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_modify_ts,,Datetime,,,During an insert or update it will be the current timestamp.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_is_active,,String,,,Indicates the value to note the current and/or active record
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_record_changed_columns,,String,,,Has the concatenated list of columns that got changes in the last update. This will be empty for full loads and inserts
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_ending_scd_event,,String,,,"Captures the last SCD event (insert, update, etc) on the record."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_name,,String,,,"This is the unique name of the source system from which this data originated, such as Zipari or Orion."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_id,,String,,,This is the unique identifier of the source system. For a simple one-to-one mapping. i.e. 101 for Zipari and 102 for Orion.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_authoritative_ind,,Boolean,,,"If true, this indicates that the record came from a source that is the authority (the source system manages that record) for this data point. For example, membership data from Facets is authoritative."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_timestamp,,Datetime,,,This is the date including time in ISO-8601 format when this record was added or updated in the source.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,source_file_name,,String,,,"If loaded by file, this column has the file name the data was loaded from."
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,identifiers,,Map,identifier_info,one-many,This is a consolidated list of other identifiers.
+Financials,bill_custom_detail,,,reference_id,String,,,This is a unique identifier.
+Financials,bill_custom_detail,,,identifier_type,String,,,The type of identifier. Examples include driver's license and a military ID.
+Financials,bill_custom_detail,,,identifier,String,,,This is the unique identifier provided by the source system. An example is a driver's license number.
+Financials,bill_custom_detail,,,identifier_source,String,,,This is the name of the source system providing the identification.
+Financials,bill_custom_detail,,,eff_date,Date,,,This is the effective date when the identifier becomes valid or was issued.
+Financials,bill_custom_detail,,,exp_date,Date,,,This is the expiry date when the identifier is no longer valid.
+Financials,bill_custom_detail,,,standard_id,String,,,This is the ID value for the reference ID.
+Financials,bill_custom_detail,,,id_check_digit,String,,,This is the digit check for the reference ID.
+Financials,bill_custom_detail,,,check_digit_schema,String,,,This is the schema applied to the check digit.
+Financials,bill_custom_detail,,,issuing_authority,String,,,This is the name of the issuing authority associated with the identification. An example would be the state department that issued a driver's license.
+Financials,bill_custom_detail,,,organization,String,,,This is the organization associated with the identification.
+Financials,bill_custom_detail,,,last_update_date,Date,,,This is the date and time that the identification was last updated in the source system.
+Financials,bill_custom_detail,,,id_status,String,,,"This is the current status of the identification. Examples include valid, expired, and revoked."
+Financials,bill_custom_detail,,,use,String,,,This is the purpose of the identifier.
+Financials,bill_custom_detail,,,type_display,Date,,,The description of the identifier.
+Financials,bill_custom_detail,,,type_system,String,,,The system of the identifier.
+Financials,bill_custom_detail,,,system,String,,,The namespace of the identifier value.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,additional_source_identifiers,,Map,string,one-many,This contains sourceID key value pairs from multiple sources.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,extension_source_values,,Array,extension_source_values_info,one-many,This contains source values (in form of key value pairs) that cannot be mapped but are carried forward to silver layer.
+Financials,bill_custom_detail,,,reference_id,String,,,This is a unique identifier.
+Financials,bill_custom_detail,,,source_column_name,String,,,The name of the column from the source system.
+Financials,bill_custom_detail,,,source_column_value,String,,,This is the actual value associated with source column name.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,data_quality_result,,Object,data_quality_result_info,one-one,This contains the results from Data Quality validation done on the other columns of the record.
+Financials,bill_custom_detail,,,severe_count,Int4,,,This is the number of severe errors on the data quality result.
+Financials,bill_custom_detail,,,warning_count,Int4,,,This is the number of warnings on the data quality result.
+Financials,bill_custom_detail,,,severe_errors,Array,,,This is the list of severe errors on the data quality result.
+Financials,bill_custom_detail,,,warning_errors,Array,,,This is the list of warnings on the data quality result.
+Financials,bill_custom_detail,This domain includes information about Bill Custom Details.,abacus_archival_type,,String,,,This column will store the archival policy applicable for this record at a row level. Possible values are 'abacus'( represents that record has been archived by abacus insights) 'source'( represents that record has been archived by source system) 'null' means record is not archived.

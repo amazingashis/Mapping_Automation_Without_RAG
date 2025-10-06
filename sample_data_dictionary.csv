@@ -1,0 +1,56 @@
+table_name,column_name,data_type,description,business_rules
+member_demographics,member_id,VARCHAR(50),Unique identifier for member,Primary key
+member_demographics,first_name,VARCHAR(100),Member first name,Required field
+member_demographics,last_name,VARCHAR(100),Member last name,Required field
+member_demographics,date_of_birth,DATE,Member date of birth,Format: YYYY-MM-DD
+member_demographics,gender,CHAR(1),Member gender,M/F/U (Male/Female/Unknown)
+member_demographics,social_security_number,VARCHAR(11),Member SSN,Format: XXX-XX-XXXX
+member_demographics,phone_number,VARCHAR(15),Primary phone number,Format: (XXX) XXX-XXXX
+member_demographics,email_address,VARCHAR(255),Primary email address,Valid email format
+member_demographics,address_line_1,VARCHAR(255),Primary address line 1,Required for mailing
+member_demographics,address_line_2,VARCHAR(255),Primary address line 2,Optional
+member_demographics,city,VARCHAR(100),City name,Required
+member_demographics,state,CHAR(2),State abbreviation,US state codes
+member_demographics,zip_code,VARCHAR(10),ZIP code,Format: XXXXX or XXXXX-XXXX
+claims_detail,claim_id,VARCHAR(50),Unique claim identifier,Primary key
+claims_detail,member_id,VARCHAR(50),Member identifier,Foreign key to member_demographics
+claims_detail,provider_id,VARCHAR(50),Service provider identifier,Foreign key to provider_master
+claims_detail,service_date,DATE,Date of service,Format: YYYY-MM-DD
+claims_detail,procedure_code,VARCHAR(10),CPT/HCPCS procedure code,Standard medical codes
+claims_detail,diagnosis_code,VARCHAR(10),ICD-10 diagnosis code,Standard diagnosis codes
+claims_detail,service_units,INTEGER,Number of service units,Positive integer
+claims_detail,billed_amount,DECIMAL(10,2),Amount billed by provider,Currency format
+claims_detail,allowed_amount,DECIMAL(10,2),Amount allowed by plan,Currency format
+claims_detail,paid_amount,DECIMAL(10,2),Amount paid to provider,Currency format
+claims_detail,deductible_amount,DECIMAL(10,2),Member deductible amount,Currency format
+claims_detail,copay_amount,DECIMAL(10,2),Member copay amount,Currency format
+claims_detail,coinsurance_amount,DECIMAL(10,2),Member coinsurance amount,Currency format
+provider_master,provider_id,VARCHAR(50),Unique provider identifier,Primary key
+provider_master,npi_number,VARCHAR(10),National Provider Identifier,10-digit number
+provider_master,provider_name,VARCHAR(255),Provider full name,Required field
+provider_master,provider_type,VARCHAR(50),Type of provider,Individual/Organization
+provider_master,specialty_code,VARCHAR(10),Provider specialty code,Medical specialty codes
+provider_master,practice_name,VARCHAR(255),Practice or organization name,Optional for individuals
+provider_master,phone_number,VARCHAR(15),Provider phone number,Format: (XXX) XXX-XXXX
+provider_master,address_line_1,VARCHAR(255),Provider address line 1,Required
+provider_master,address_line_2,VARCHAR(255),Provider address line 2,Optional
+provider_master,city,VARCHAR(100),City name,Required
+provider_master,state,CHAR(2),State abbreviation,US state codes
+provider_master,zip_code,VARCHAR(10),ZIP code,Format: XXXXX or XXXXX-XXXX
+provider_master,license_number,VARCHAR(50),State license number,State-specific format
+provider_master,network_status,VARCHAR(20),Network participation status,In-Network/Out-of-Network
+facets_member,facets_member_id,VARCHAR(20),Facets system member ID,Primary key in Facets
+facets_member,subscriber_id,VARCHAR(20),Subscriber identifier,Contract holder ID
+facets_member,group_number,VARCHAR(20),Employer group number,Insurance group identifier
+facets_member,plan_code,VARCHAR(10),Plan code identifier,Facets plan codes
+facets_member,coverage_start_date,DATE,Coverage effective date,Format: YYYY-MM-DD
+facets_member,coverage_end_date,DATE,Coverage termination date,Format: YYYY-MM-DD
+facets_member,relationship_code,VARCHAR(5),Relationship to subscriber,Facets relationship codes
+facets_member,benefit_package_id,VARCHAR(20),Benefit package identifier,Facets benefit codes
+cigna_enrollment,cigna_member_id,VARCHAR(25),Cigna member identifier,Primary key in Cigna
+cigna_enrollment,contract_number,VARCHAR(20),Insurance contract number,Policy number
+cigna_enrollment,product_line,VARCHAR(50),Insurance product line,Medical/Dental/Vision
+cigna_enrollment,enrollment_date,DATE,Initial enrollment date,Format: YYYY-MM-DD
+cigna_enrollment,termination_date,DATE,Coverage termination date,Format: YYYY-MM-DD
+cigna_enrollment,premium_amount,DECIMAL(10,2),Monthly premium amount,Currency format
+cigna_enrollment,employer_group_id,VARCHAR(20),Employer group identifier,Group contract ID
