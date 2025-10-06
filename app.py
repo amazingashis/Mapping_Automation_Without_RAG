@@ -90,9 +90,15 @@ def filter_data_dictionary_by_tables(data_dict, table_names):
     return data_dict
 
 def call_databricks_llm(endpoint_key, prompt, max_tokens=4000):
-    """Call Databricks LLM endpoint"""
+    """Call Databricks LLM endpoint with improved error handling and retry logic"""
+    import time
+    
     try:
         url = DATABRICKS_ENDPOINTS[endpoint_key]
+        
+        # Check if token is configured
+        if DATABRICKS_TOKEN == 'YOUR_DATABRICKS_TOKEN_HERE':
+            return {"error": "Databricks token not configured. Please update config.py with your actual token."}
         
         headers = {
             'Content-Type': 'application/json',
@@ -107,15 +113,63 @@ def call_databricks_llm(endpoint_key, prompt, max_tokens=4000):
             }
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        # Add timeout and retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                print(f"Attempting API call to {endpoint_key} (attempt {attempt + 1}/{max_retries})")
+                
+                response = requests.post(
+                    url, 
+                    headers=headers, 
+                    json=payload,
+                    timeout=(30, 120),  # (connection_timeout, read_timeout)
+                    verify=True
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    print(f"API call successful")
+                    return result
+                elif response.status_code == 401:
+                    return {"error": "Authentication failed. Please check your Databricks token in config.py"}
+                elif response.status_code == 404:
+                    return {"error": f"Endpoint not found. Please verify the endpoint URL: {url}"}
+                elif response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        wait_time = 2 ** attempt  # Exponential backoff
+                        print(f"Rate limited. Waiting {wait_time} seconds before retry...")
+                        time.sleep(wait_time)
+                        continue
+                    return {"error": "Rate limit exceeded. Please try again later."}
+                else:
+                    return {"error": f"API call failed with status {response.status_code}: {response.text}"}
+                    
+            except requests.exceptions.ConnectTimeout:
+                if attempt < max_retries - 1:
+                    print(f"Connection timeout. Retrying in 2 seconds...")
+                    time.sleep(2)
+                    continue
+                return {"error": "Connection timeout. Please check your internet connection and try again."}
+                
+            except requests.exceptions.ReadTimeout:
+                if attempt < max_retries - 1:
+                    print(f"Read timeout. Retrying in 2 seconds...")
+                    time.sleep(2)
+                    continue
+                return {"error": "Read timeout. The AI model is taking too long to respond. Please try again."}
+                
+            except requests.exceptions.ConnectionError as e:
+                if attempt < max_retries - 1:
+                    print(f"Connection error: {str(e)}. Retrying in 2 seconds...")
+                    time.sleep(2)
+                    continue
+                return {"error": f"Connection error: Unable to connect to Databricks. Please check your internet connection and endpoint URL."}
         
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return {"error": f"API call failed with status {response.status_code}: {response.text}"}
+        return {"error": "Max retries exceeded. Please try again later."}
             
     except Exception as e:
-        return {"error": f"Error calling LLM: {str(e)}"}
+        return {"error": f"Unexpected error calling LLM: {str(e)}"}
 
 def create_mapping_prompt(output_layout, data_dictionary, table_names):
     """Create a comprehensive prompt for the LLM to generate data mapping"""
@@ -254,6 +308,33 @@ def get_layout_preview(layout_name):
         'total_fields': len(layout_data),
         'preview': preview_data
     })
+
+@app.route('/api/test_connection/<model_name>')
+def test_databricks_connection(model_name):
+    """Test endpoint to verify Databricks LLM connection"""
+    if model_name not in DATABRICKS_ENDPOINTS:
+        return jsonify({'error': f'Invalid model name. Available models: {list(DATABRICKS_ENDPOINTS.keys())}'}), 400
+    
+    # Test with a simple prompt
+    test_prompt = "Hello, please respond with 'Connection successful' if you can read this message."
+    
+    print(f"Testing connection to {model_name}...")
+    result = call_databricks_llm(model_name, test_prompt, max_tokens=100)
+    
+    if 'error' in result:
+        return jsonify({
+            'model': model_name,
+            'status': 'failed',
+            'error': result['error'],
+            'endpoint_url': DATABRICKS_ENDPOINTS[model_name]
+        }), 500
+    else:
+        return jsonify({
+            'model': model_name,
+            'status': 'success',
+            'response': result,
+            'endpoint_url': DATABRICKS_ENDPOINTS[model_name]
+        })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

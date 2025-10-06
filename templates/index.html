@@ -289,6 +289,14 @@
                         </select>
                         <div class="help-text">Claude Sonnet 4 is recommended for complex healthcare data transformations.</div>
                     </div>
+                    
+                    <!-- Connection Test -->
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="testConnection()" style="margin-top: 10px;">
+                            🔗 Test Databricks Connection
+                        </button>
+                        <div id="connectionResult" style="margin-top: 10px; display: none;"></div>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -441,6 +449,48 @@
                 link.click();
                 URL.revokeObjectURL(url);
             }
+        }
+
+        function testConnection() {
+            const modelSelect = document.getElementById('llm_model');
+            const selectedModel = modelSelect.value;
+            const resultDiv = document.getElementById('connectionResult');
+            
+            // Show loading state
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div style="color: #007bff;">🔄 Testing connection to ' + selectedModel + '...</div>';
+            
+            fetch(`/api/test_connection/${selectedModel}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        resultDiv.innerHTML = `
+                            <div style="color: #28a745; padding: 10px; background: #d4edda; border-radius: 5px; border: 1px solid #c3e6cb;">
+                                ✅ <strong>Connection Successful!</strong><br>
+                                Model: ${data.model}<br>
+                                Endpoint: ${data.endpoint_url}<br>
+                                Response: ${JSON.stringify(data.response, null, 2)}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px; border: 1px solid #f5c6cb;">
+                                ❌ <strong>Connection Failed!</strong><br>
+                                Model: ${data.model}<br>
+                                Endpoint: ${data.endpoint_url}<br>
+                                Error: ${data.error}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `
+                        <div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px; border: 1px solid #f5c6cb;">
+                            ❌ <strong>Network Error!</strong><br>
+                            ${error.message}
+                        </div>
+                    `;
+                });
         }
     </script>
 </body>
