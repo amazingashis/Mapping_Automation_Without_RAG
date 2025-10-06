@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, send_file
 import os
 import pandas as pd
 import PyPDF2
@@ -7,7 +7,11 @@ import json
 from werkzeug.utils import secure_filename
 import tempfile
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
+from datetime import datetime
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -174,6 +178,217 @@ def call_databricks_llm(endpoint_key, prompt, max_tokens=4000):
     except Exception as e:
         return {"error": f"Unexpected error calling LLM: {str(e)}"}
 
+def parse_mapping_result_to_structured_data(mapping_result):
+    """Parse LLM mapping result into structured data for Excel export"""
+    try:
+        # Extract the response content
+        if isinstance(mapping_result, dict):
+            if 'choices' in mapping_result and len(mapping_result['choices']) > 0:
+                content = mapping_result['choices'][0].get('message', {}).get('content', '')
+            elif 'predictions' in mapping_result and len(mapping_result['predictions']) > 0:
+                content = mapping_result['predictions'][0].get('candidates', [{}])[0].get('content', '')
+            elif 'error' in mapping_result:
+                return {'error': mapping_result['error']}
+            else:
+                content = str(mapping_result)
+        else:
+            content = str(mapping_result)
+        
+        # Parse the content to extract mapping information
+        # This is a simplified parser - can be enhanced based on actual LLM response format
+        lines = content.split('\n')
+        
+        field_mappings = []
+        sql_queries = []
+        data_quality_checks = []
+        implementation_notes = []
+        
+        current_section = None
+        current_content = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Identify sections based on common headers
+            if 'field' in line.lower() and 'mapping' in line.lower():
+                current_section = 'field_mappings'
+            elif 'sql' in line.lower() and ('transformation' in line.lower() or 'query' in line.lower()):
+                current_section = 'sql_queries'
+            elif 'data quality' in line.lower() or 'validation' in line.lower():
+                current_section = 'data_quality_checks'
+            elif 'implementation' in line.lower() or 'notes' in line.lower():
+                current_section = 'implementation_notes'
+            else:
+                current_content.append(line)
+                
+            # Store content in appropriate section
+            if current_section == 'field_mappings' and line and not ('field' in line.lower() and 'mapping' in line.lower()):
+                field_mappings.append(line)
+            elif current_section == 'sql_queries' and line and not ('sql' in line.lower()):
+                sql_queries.append(line)
+            elif current_section == 'data_quality_checks' and line and not ('data quality' in line.lower()):
+                data_quality_checks.append(line)
+            elif current_section == 'implementation_notes' and line and not ('implementation' in line.lower()):
+                implementation_notes.append(line)
+        
+        return {
+            'full_content': content,
+            'field_mappings': field_mappings,
+            'sql_queries': sql_queries,
+            'data_quality_checks': data_quality_checks,
+            'implementation_notes': implementation_notes
+        }
+        
+    except Exception as e:
+        return {'error': f'Error parsing mapping result: {str(e)}'}
+
+def create_excel_mapping_report(mapping_data, layout_name, table_names, output_layout):
+    """Create a comprehensive Excel report with multiple sheets"""
+    try:
+        # Create a BytesIO object to store the Excel file
+        excel_buffer = BytesIO()
+        
+        # Create a new workbook
+        wb = openpyxl.Workbook()
+        
+        # Remove default sheet
+        wb.remove(wb.active)
+        
+        # Define styles
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                       top=Side(style='thin'), bottom=Side(style='thin'))
+        
+        # Sheet 1: Summary
+        summary_ws = wb.create_sheet("Summary")
+        summary_data = [
+            ["Healthcare Data Mapping Report"],
+            [""],
+            ["Generated Date:", datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+            ["Target Layout:", layout_name],
+            ["Source Tables:", ", ".join(table_names)],
+            ["Total Target Fields:", len(output_layout)],
+            [""],
+            ["Report Sections:"],
+            ["• Field Mappings: Detailed field-by-field mapping"],
+            ["• SQL Transformations: Complete SQL queries"],
+            ["• Data Quality Checks: Validation rules and checks"],
+            ["• Implementation Notes: Technical considerations"],
+            ["• Target Layout: Complete target schema"]
+        ]
+        
+        for row_num, row_data in enumerate(summary_data, 1):
+            for col_num, value in enumerate(row_data, 1):
+                cell = summary_ws.cell(row=row_num, column=col_num, value=value)
+                if row_num == 1:  # Title
+                    cell.font = Font(bold=True, size=16)
+                elif row_num in [3, 4, 5, 6]:  # Summary info
+                    if col_num == 1:
+                        cell.font = Font(bold=True)
+        
+        # Sheet 2: Field Mappings
+        if 'field_mappings' in mapping_data and mapping_data['field_mappings']:
+            mapping_ws = wb.create_sheet("Field Mappings")
+            mapping_ws.append(["Target Field", "Source Mapping", "Transformation Logic", "Data Type", "Notes"])
+            
+            # Apply header style
+            for cell in mapping_ws[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.border = border
+            
+            # Add mapping data
+            for i, mapping_line in enumerate(mapping_data['field_mappings'][:50]):  # Limit to 50 for readability
+                mapping_ws.append([f"Field_{i+1}", mapping_line, "See SQL Transformations", "VARCHAR", "Auto-generated"])
+        
+        # Sheet 3: SQL Transformations
+        if 'sql_queries' in mapping_data and mapping_data['sql_queries']:
+            sql_ws = wb.create_sheet("SQL Transformations")
+            sql_ws.append(["Query ID", "SQL Statement", "Purpose", "Tables Involved"])
+            
+            # Apply header style
+            for cell in sql_ws[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.border = border
+            
+            # Add SQL queries
+            for i, sql_line in enumerate(mapping_data['sql_queries'][:30]):  # Limit to 30 for readability
+                sql_ws.append([f"QUERY_{i+1}", sql_line, "Data Transformation", ", ".join(table_names)])
+        
+        # Sheet 4: Data Quality Checks
+        if 'data_quality_checks' in mapping_data and mapping_data['data_quality_checks']:
+            dq_ws = wb.create_sheet("Data Quality Checks")
+            dq_ws.append(["Check ID", "Validation Rule", "Check Type", "Severity", "Action"])
+            
+            # Apply header style
+            for cell in dq_ws[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.border = border
+            
+            # Add data quality checks
+            for i, dq_line in enumerate(mapping_data['data_quality_checks'][:30]):
+                dq_ws.append([f"DQ_{i+1}", dq_line, "Validation", "High", "Reject"])
+        
+        # Sheet 5: Target Layout
+        layout_ws = wb.create_sheet("Target Layout")
+        if output_layout:
+            # Convert output layout to DataFrame for easier handling
+            df = pd.DataFrame(output_layout)
+            
+            # Add headers
+            if not df.empty:
+                headers = list(df.columns)
+                layout_ws.append(headers)
+                
+                # Apply header style
+                for cell in layout_ws[1]:
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.border = border
+                
+                # Add data rows
+                for row in dataframe_to_rows(df, index=False, header=False):
+                    layout_ws.append(row)
+        
+        # Sheet 6: Full Mapping Result
+        full_ws = wb.create_sheet("Full Mapping Result")
+        if 'full_content' in mapping_data:
+            full_ws.append(["Complete AI-Generated Mapping Result"])
+            full_ws.cell(row=1, column=1).font = Font(bold=True, size=14)
+            
+            # Split content into lines and add to sheet
+            content_lines = mapping_data['full_content'].split('\n')
+            for i, line in enumerate(content_lines[:500], 2):  # Limit to 500 lines
+                full_ws.cell(row=i, column=1, value=line)
+        
+        # Auto-adjust column widths
+        for sheet in wb.worksheets:
+            for column in sheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+                sheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to BytesIO
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        return excel_buffer
+        
+    except Exception as e:
+        return None
+
 def create_mapping_prompt(output_layout, data_dictionary, table_names):
     """Create a comprehensive prompt for the LLM to generate data mapping"""
     
@@ -321,6 +536,9 @@ def generate_mapping():
         # Call Databricks LLM
         llm_response = call_databricks_llm(llm_model, prompt)
         
+        # Parse mapping result for structured data
+        parsed_mapping = parse_mapping_result_to_structured_data(llm_response)
+        
         # Clean up uploaded file
         os.remove(file_path)
         
@@ -330,8 +548,10 @@ def generate_mapping():
             'table_names': table_names,
             'llm_model': llm_model,
             'mapping_result': llm_response,
+            'parsed_mapping': parsed_mapping,
             'output_layout_fields': len(output_layout),
-            'data_dict_entries': len(filtered_data_dict) if isinstance(filtered_data_dict, list) else 1
+            'data_dict_entries': len(filtered_data_dict) if isinstance(filtered_data_dict, list) else 1,
+            'excel_available': True
         }
         
         return jsonify(response_data)
@@ -357,6 +577,56 @@ def get_layout_preview(layout_name):
         'total_fields': len(layout_data),
         'preview': preview_data
     })
+
+@app.route('/api/export_excel', methods=['POST'])
+def export_mapping_to_excel():
+    """Export mapping result to Excel file"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract required data
+        mapping_result = data.get('mapping_result')
+        layout_name = data.get('layout', 'unknown_layout')
+        table_names = data.get('table_names', [])
+        output_layout = data.get('output_layout', [])
+        
+        if not mapping_result:
+            return jsonify({'error': 'No mapping result provided'}), 400
+        
+        # Parse the mapping result
+        parsed_mapping = parse_mapping_result_to_structured_data(mapping_result)
+        
+        if 'error' in parsed_mapping:
+            return jsonify({'error': parsed_mapping['error']}), 400
+        
+        # Create Excel file
+        excel_buffer = create_excel_mapping_report(
+            parsed_mapping, 
+            layout_name, 
+            table_names, 
+            output_layout
+        )
+        
+        if excel_buffer is None:
+            return jsonify({'error': 'Failed to create Excel file'}), 500
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"healthcare_data_mapping_{layout_name}_{timestamp}.xlsx"
+        
+        # Return the Excel file
+        return send_file(
+            excel_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        return jsonify({'error': f'Error creating Excel export: {str(e)}'}), 500
 
 @app.route('/api/test_connection/<model_name>')
 def test_databricks_connection(model_name):

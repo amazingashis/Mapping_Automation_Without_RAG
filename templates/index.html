@@ -322,8 +322,11 @@
                 <h3>✅ Generated Data Mapping Results</h3>
                 <div id="resultContent" class="result-content"></div>
                 <div class="button-group" style="margin-top: 20px;">
+                    <button type="button" class="btn btn-primary" onclick="exportToExcel()">
+                        📊 Export to Excel
+                    </button>
                     <button type="button" class="btn btn-secondary" onclick="downloadResults()">
-                        💾 Download Results
+                        💾 Download JSON
                     </button>
                 </div>
             </div>
@@ -436,6 +439,106 @@
             document.getElementById('error').style.display = 'none';
             document.getElementById('layoutPreview').style.display = 'none';
             currentResults = null;
+        }
+
+        function exportToExcel() {
+            if (!currentResults) {
+                alert('No mapping results available to export. Please generate a mapping first.');
+                return;
+            }
+            
+            // Show loading indicator
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+            loadingDiv.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p>📊 Creating Excel report...</p>
+                <p><small>Generating comprehensive healthcare data mapping report.</small></p>
+            `;
+            
+            // Prepare export data
+            const exportData = {
+                mapping_result: currentResults.mapping_result,
+                layout: currentResults.layout,
+                table_names: currentResults.table_names,
+                output_layout: [] // Will be fetched from the layout preview
+            };
+            
+            // Get the output layout data
+            fetch(`/api/layouts/${currentResults.layout}`)
+                .then(response => response.json())
+                .then(layoutData => {
+                    if (!layoutData.error) {
+                        exportData.output_layout = layoutData.preview || [];
+                    }
+                    
+                    // Make the export request
+                    return fetch('/api/export_excel', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(exportData)
+                    });
+                })
+                .then(response => {
+                    loadingDiv.style.display = 'none';
+                    
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    
+                    // Create download link
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    
+                    // Generate filename with timestamp
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+                    link.download = `healthcare_data_mapping_${currentResults.layout}_${timestamp}.xlsx`;
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    
+                    // Show success message
+                    showTemporaryMessage('✅ Excel report downloaded successfully!', 'success');
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    console.error('Export error:', error);
+                    showError('Failed to export to Excel: ' + (error.error || error.message || 'Unknown error'));
+                });
+        }
+        
+        function showTemporaryMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'success' ? '#d4edda' : '#d1ecf1'};
+                color: ${type === 'success' ? '#155724' : '#0c5460'};
+                border: 1px solid ${type === 'success' ? '#c3e6cb' : '#bee5eb'};
+                border-radius: 8px;
+                z-index: 1000;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                font-weight: 500;
+            `;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (document.body.contains(messageDiv)) {
+                    document.body.removeChild(messageDiv);
+                }
+            }, 3000);
         }
 
         function downloadResults() {
