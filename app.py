@@ -179,7 +179,7 @@ def call_databricks_llm(endpoint_key, prompt, max_tokens=4000):
         return {"error": f"Unexpected error calling LLM: {str(e)}"}
 
 def parse_mapping_result_to_structured_data(mapping_result):
-    """Parse LLM mapping result into structured data for Excel export"""
+    """Parse LLM mapping result into structured field mapping data"""
     try:
         # Extract the response content
         if isinstance(mapping_result, dict):
@@ -194,58 +194,53 @@ def parse_mapping_result_to_structured_data(mapping_result):
         else:
             content = str(mapping_result)
         
-        # Parse the content to extract mapping information
-        # This is a simplified parser - can be enhanced based on actual LLM response format
-        lines = content.split('\n')
-        
+        # Parse the structured field mappings
         field_mappings = []
-        sql_queries = []
-        data_quality_checks = []
-        implementation_notes = []
         
-        current_section = None
-        current_content = []
+        # Look for the structured format with TARGET_FIELD patterns
+        lines = content.split('\n')
+        current_field = {}
         
         for line in lines:
             line = line.strip()
-            if not line:
+            if not line or line == '---':
+                if current_field and 'target_field' in current_field:
+                    field_mappings.append(current_field)
+                    current_field = {}
                 continue
-                
-            # Identify sections based on common headers
-            if 'field' in line.lower() and 'mapping' in line.lower():
-                current_section = 'field_mappings'
-            elif 'sql' in line.lower() and ('transformation' in line.lower() or 'query' in line.lower()):
-                current_section = 'sql_queries'
-            elif 'data quality' in line.lower() or 'validation' in line.lower():
-                current_section = 'data_quality_checks'
-            elif 'implementation' in line.lower() or 'notes' in line.lower():
-                current_section = 'implementation_notes'
-            else:
-                current_content.append(line)
-                
-            # Store content in appropriate section
-            if current_section == 'field_mappings' and line and not ('field' in line.lower() and 'mapping' in line.lower()):
-                field_mappings.append(line)
-            elif current_section == 'sql_queries' and line and not ('sql' in line.lower()):
-                sql_queries.append(line)
-            elif current_section == 'data_quality_checks' and line and not ('data quality' in line.lower()):
-                data_quality_checks.append(line)
-            elif current_section == 'implementation_notes' and line and not ('implementation' in line.lower()):
-                implementation_notes.append(line)
+            
+            # Parse structured field information
+            if line.startswith('TARGET_FIELD:'):
+                current_field['target_field'] = line.replace('TARGET_FIELD:', '').strip()
+            elif line.startswith('TARGET_TYPE:'):
+                current_field['target_type'] = line.replace('TARGET_TYPE:', '').strip()
+            elif line.startswith('TARGET_DESC:'):
+                current_field['target_desc'] = line.replace('TARGET_DESC:', '').strip()
+            elif line.startswith('SOURCE_TABLE:'):
+                current_field['source_table'] = line.replace('SOURCE_TABLE:', '').strip()
+            elif line.startswith('SOURCE_COLUMN:'):
+                current_field['source_column'] = line.replace('SOURCE_COLUMN:', '').strip()
+            elif line.startswith('TRANSFORMATION:'):
+                current_field['transformation'] = line.replace('TRANSFORMATION:', '').strip()
+            elif line.startswith('CONFIDENCE:'):
+                current_field['confidence'] = line.replace('CONFIDENCE:', '').strip()
+            elif line.startswith('REASON:'):
+                current_field['reason'] = line.replace('REASON:', '').strip()
+        
+        # Add the last field if it exists
+        if current_field and 'target_field' in current_field:
+            field_mappings.append(current_field)
         
         return {
             'full_content': content,
-            'field_mappings': field_mappings,
-            'sql_queries': sql_queries,
-            'data_quality_checks': data_quality_checks,
-            'implementation_notes': implementation_notes
+            'field_mappings': field_mappings
         }
         
     except Exception as e:
         return {'error': f'Error parsing mapping result: {str(e)}'}
 
 def create_excel_mapping_report(mapping_data, layout_name, table_names, output_layout):
-    """Create a comprehensive Excel report with multiple sheets"""
+    """Create a clean Excel report with structured field mappings"""
     try:
         # Create a BytesIO object to store the Excel file
         excel_buffer = BytesIO()
@@ -272,12 +267,10 @@ def create_excel_mapping_report(mapping_data, layout_name, table_names, output_l
             ["Source Tables:", ", ".join(table_names)],
             ["Total Target Fields:", len(output_layout)],
             [""],
-            ["Report Sections:"],
-            ["• Field Mappings: Detailed field-by-field mapping"],
-            ["• SQL Transformations: Complete SQL queries"],
-            ["• Data Quality Checks: Validation rules and checks"],
-            ["• Implementation Notes: Technical considerations"],
-            ["• Target Layout: Complete target schema"]
+            ["Report Contents:"],
+            ["• Field Mappings: Structured field-by-field mapping with confidence scores"],
+            ["• AI-generated transformations with reasoning"],
+            ["• Healthcare data compliance considerations"]
         ]
         
         for row_num, row_data in enumerate(summary_data, 1):
@@ -289,96 +282,141 @@ def create_excel_mapping_report(mapping_data, layout_name, table_names, output_l
                     if col_num == 1:
                         cell.font = Font(bold=True)
         
-        # Sheet 2: Field Mappings
+        # Sheet 2: Field Mappings (Main Sheet)
+        mapping_ws = wb.create_sheet("Field Mappings")
+        
+        # Define headers as requested
+        headers = [
+            "Target Field",
+            "Target Data Type", 
+            "Target Description",
+            "Source Table",
+            "Source Column",
+            "Transformation / Mapping Rules",
+            "Confidence",
+            "Reason (Why AI mapping the source field to target)"
+        ]
+        
+        mapping_ws.append(headers)
+        
+        # Apply header style
+        for cell in mapping_ws[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.border = border
+            cell.alignment = Alignment(wrap_text=True, vertical='center')
+        
+        # Generate field mappings based on parsed AI content or output layout
         if 'field_mappings' in mapping_data and mapping_data['field_mappings']:
-            mapping_ws = wb.create_sheet("Field Mappings")
-            mapping_ws.append(["Target Field", "Source Mapping", "Transformation Logic", "Data Type", "Notes"])
-            
-            # Apply header style
-            for cell in mapping_ws[1]:
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = border
-            
-            # Add mapping data
-            for i, mapping_line in enumerate(mapping_data['field_mappings'][:50]):  # Limit to 50 for readability
-                mapping_ws.append([f"Field_{i+1}", mapping_line, "See SQL Transformations", "VARCHAR", "Auto-generated"])
+            # Use parsed AI field mappings
+            for field_mapping in mapping_data['field_mappings']:
+                row_data = [
+                    field_mapping.get('target_field', 'N/A'),
+                    field_mapping.get('target_type', 'VARCHAR(255)'),
+                    field_mapping.get('target_desc', 'No description'),
+                    field_mapping.get('source_table', 'TBD'),
+                    field_mapping.get('source_column', 'TBD'),
+                    field_mapping.get('transformation', 'Direct mapping'),
+                    field_mapping.get('confidence', 'Medium'),
+                    field_mapping.get('reason', 'AI analysis required')
+                ]
+                mapping_ws.append(row_data)
         
-        # Sheet 3: SQL Transformations
-        if 'sql_queries' in mapping_data and mapping_data['sql_queries']:
-            sql_ws = wb.create_sheet("SQL Transformations")
-            sql_ws.append(["Query ID", "SQL Statement", "Purpose", "Tables Involved"])
+        elif output_layout:
+            # Fallback: Generate mappings based on output layout
+            ai_content = mapping_data.get('full_content', '')
             
-            # Apply header style
-            for cell in sql_ws[1]:
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = border
-            
-            # Add SQL queries
-            for i, sql_line in enumerate(mapping_data['sql_queries'][:30]):  # Limit to 30 for readability
-                sql_ws.append([f"QUERY_{i+1}", sql_line, "Data Transformation", ", ".join(table_names)])
-        
-        # Sheet 4: Data Quality Checks
-        if 'data_quality_checks' in mapping_data and mapping_data['data_quality_checks']:
-            dq_ws = wb.create_sheet("Data Quality Checks")
-            dq_ws.append(["Check ID", "Validation Rule", "Check Type", "Severity", "Action"])
-            
-            # Apply header style
-            for cell in dq_ws[1]:
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = border
-            
-            # Add data quality checks
-            for i, dq_line in enumerate(mapping_data['data_quality_checks'][:30]):
-                dq_ws.append([f"DQ_{i+1}", dq_line, "Validation", "High", "Reject"])
-        
-        # Sheet 5: Target Layout
-        layout_ws = wb.create_sheet("Target Layout")
-        if output_layout:
-            # Convert output layout to DataFrame for easier handling
-            df = pd.DataFrame(output_layout)
-            
-            # Add headers
-            if not df.empty:
-                headers = list(df.columns)
-                layout_ws.append(headers)
+            for idx, field in enumerate(output_layout):
+                target_field = field.get('Field', f'field_{idx+1}')
+                target_type = field.get('Type', 'VARCHAR(255)')
+                target_desc = field.get('Description', 'Field description')
                 
-                # Apply header style
-                for cell in layout_ws[1]:
-                    cell.font = header_font
-                    cell.fill = header_fill
-                    cell.border = border
+                # Extract mapping information from AI content for this field
+                source_table = "TBD"
+                source_column = "TBD" 
+                transformation = "Direct mapping"
+                confidence = "Medium"
+                reason = "AI analysis required - please review the full content for detailed mapping logic"
                 
-                # Add data rows
-                for row in dataframe_to_rows(df, index=False, header=False):
-                    layout_ws.append(row)
+                # Try to find relevant information in AI content
+                if target_field.lower() in ai_content.lower():
+                    # Look for common patterns in AI responses
+                    for table in table_names:
+                        if table.lower() in ai_content.lower():
+                            source_table = table
+                            break
+                    
+                    source_column = target_field  # Default assumption
+                    confidence = "High" if any(keyword in ai_content.lower() for keyword in [target_field.lower(), 'map', 'transform']) else "Medium"
+                    reason = f"Field identified in AI analysis. Common healthcare field mapping for {target_field}. Review full AI content for complete logic."
+                    
+                    # Check for transformation keywords
+                    if any(keyword in ai_content.lower() for keyword in ['trim', 'cast', 'convert', 'case']):
+                        transformation = "Data transformation required (see AI analysis)"
+                    elif any(keyword in ai_content.lower() for keyword in ['join', 'lookup']):
+                        transformation = "Multi-table join required"
+                    else:
+                        transformation = "Direct field mapping"
+                
+                # Add row to Excel
+                row_data = [
+                    target_field,
+                    target_type,
+                    target_desc,
+                    source_table,
+                    source_column,
+                    transformation,
+                    confidence,
+                    reason
+                ]
+                
+                mapping_ws.append(row_data)
         
-        # Sheet 6: Full Mapping Result
-        full_ws = wb.create_sheet("Full Mapping Result")
-        if 'full_content' in mapping_data:
-            full_ws.append(["Complete AI-Generated Mapping Result"])
-            full_ws.cell(row=1, column=1).font = Font(bold=True, size=14)
-            
-            # Split content into lines and add to sheet
-            content_lines = mapping_data['full_content'].split('\n')
-            for i, line in enumerate(content_lines[:500], 2):  # Limit to 500 lines
-                full_ws.cell(row=i, column=1, value=line)
+        # Apply border styling to all data rows
+        for row_num in range(2, mapping_ws.max_row + 1):
+            for col_num in range(1, len(headers) + 1):
+                cell = mapping_ws.cell(row=row_num, column=col_num)
+                cell.border = border
+                cell.alignment = Alignment(wrap_text=True, vertical='top')
         
         # Auto-adjust column widths
-        for sheet in wb.worksheets:
-            for column in sheet.columns:
-                max_length = 0
-                column_letter = column[0].column_letter
-                for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except:
-                        pass
-                adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
-                sheet.column_dimensions[column_letter].width = adjusted_width
+        for column in mapping_ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+            mapping_ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Set specific column widths for better readability
+        mapping_ws.column_dimensions['A'].width = 20  # Target Field
+        mapping_ws.column_dimensions['B'].width = 15  # Target Data Type
+        mapping_ws.column_dimensions['C'].width = 30  # Target Description
+        mapping_ws.column_dimensions['D'].width = 20  # Source Table
+        mapping_ws.column_dimensions['E'].width = 20  # Source Column
+        mapping_ws.column_dimensions['F'].width = 40  # Transformation Rules
+        mapping_ws.column_dimensions['G'].width = 12  # Confidence
+        mapping_ws.column_dimensions['H'].width = 50  # Reason
+        
+        # Set row height for headers
+        mapping_ws.row_dimensions[1].height = 30
+        
+        # Auto-adjust column widths for summary sheet
+        for column in summary_ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            summary_ws.column_dimensions[column_letter].width = adjusted_width
         
         # Save to BytesIO
         wb.save(excel_buffer)
@@ -443,38 +481,41 @@ You are an expert US Healthcare Data Modeler and Data Analyst specializing in he
    - Ensure referential integrity across healthcare entities
 
 **OUTPUT FORMAT**:
-Provide a comprehensive healthcare data mapping document with:
-1. **Field-by-Field Mapping Table**: 
-   - Source table(s) and field(s) for each target field
-   - Transformation logic with healthcare context
-   - Data type conversions and formatting rules
-   - Business rules and validation criteria
+Provide a structured healthcare data mapping response with:
 
-2. **SQL Transformation Queries**: 
-   - Complete SQL statements for data extraction and transformation
-   - Multi-table JOIN operations with proper healthcare entity relationships
+1. **FIELD_MAPPING_TABLE** (Primary Output):
+For each target field, provide a detailed mapping in the following format:
+```
+TARGET_FIELD: [field_name]
+TARGET_TYPE: [data_type]
+TARGET_DESC: [description]
+SOURCE_TABLE: [source_table_name]
+SOURCE_COLUMN: [source_column_name]
+TRANSFORMATION: [transformation_logic]
+CONFIDENCE: [High/Medium/Low]
+REASON: [detailed_explanation_with_data_dictionary_reference]
+---
+```
+
+2. **SQL_TRANSFORMATION_QUERIES**: 
+   - Complete SQL statements for key transformations
+   - Multi-table JOIN operations with healthcare entity relationships
    - Aggregation logic for summarizing healthcare transactions
-   - Error handling and data quality checks
 
-3. **Healthcare-Specific Considerations**:
-   - PHI handling and de-identification strategies
-   - Healthcare code standardization and mapping
-   - Date range validations for healthcare events
-   - Amount calculations and adjustments logic
-
-4. **Data Quality Validation Scripts**:
-   - Member ID validation and deduplication
-   - Claim amount reconciliation checks
-   - Provider network validation
-   - Date consistency and logical sequence checks
-
-5. **Implementation Notes**:
-   - Assumptions about source data structure
+3. **IMPLEMENTATION_NOTES**:
    - Healthcare business rules applied
-   - Potential data quality issues and mitigation strategies
-   - Performance optimization recommendations for large healthcare datasets
+   - HIPAA compliance considerations
+   - Data quality recommendations
+   - Performance optimization for large healthcare datasets
 
-Generate comprehensive, production-ready transformation logic that can be implemented to accurately map healthcare source tables to standardized output layouts while maintaining data integrity and compliance.
+**CRITICAL REQUIREMENTS**:
+- For each target field, analyze the data dictionary to find the most appropriate source mapping
+- Provide specific confidence levels based on field name similarity, data type compatibility, and business logic
+- Reference specific data dictionary entries in your reasoning
+- Consider healthcare industry standards and common field mappings
+- Account for data transformations needed for healthcare compliance and standardization
+
+Generate a comprehensive, structured field mapping that can be easily parsed and implemented for healthcare data integration.
 """
     
     return prompt
